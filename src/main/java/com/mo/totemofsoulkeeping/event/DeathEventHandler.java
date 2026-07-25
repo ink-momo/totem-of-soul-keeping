@@ -2,6 +2,7 @@ package com.mo.totemofsoulkeeping.event;
 
 import com.mo.totemofsoulkeeping.ModConfigs;
 import com.mo.totemofsoulkeeping.ModItems;
+import com.mo.totemofsoulkeeping.compat.CuriosCompat;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -69,6 +70,8 @@ public class DeathEventHandler {
             CompoundTag rescue = persisted.getCompound(NBT_KEY);
             rescue.putBoolean("hastotem", true);
             rescue.put(TAG_ARMOR, armorSlots);
+            // 额外记录玩家所有 Curios 槽位的物品信息，供重生时智能还原使用（仅在安装 Curios 时生效）
+            CuriosCompat.recordCuriosSlots(player, rescue);
             persisted.put(NBT_KEY, rescue);
         }
     }
@@ -141,6 +144,8 @@ public class DeathEventHandler {
         CompoundTag payload = persistent.getCompound(NBT_KEY);
         int count = payload.getInt(TAG_COUNT);
         CompoundTag armorSlots = payload.getCompound(TAG_ARMOR);
+        // 读取 ① 中额外记录的 Curios 槽位物品信息（未安装 Curios 时为空复合标签，tryReturnToCurioSlot 会直接跳过）
+        CompoundTag curiosSlots = payload.getCompound(CuriosCompat.TAG_CURIOS_SLOTS);
 
         for (int i = 0; i < count; i++) {
             CompoundTag tag = payload.getCompound(TAG_ITEM + i);
@@ -148,7 +153,7 @@ public class DeathEventHandler {
             if (stack.isEmpty()) {
                 continue;
             }
-            returnToPlayer(player, stack, armorSlots);
+            returnToPlayer(player, stack, armorSlots, curiosSlots);
         }
 
         if (ModConfigs.KEEP_EXPERIENCE.get()) {
@@ -162,8 +167,14 @@ public class DeathEventHandler {
     /**
      * 智能还原：读取①中记录的盔甲/副手 nbt，若归还物品与某记录槽位匹配，
      * 且玩家当前该槽位为空，则归还到对应槽位；否则放入背包，背包满则掉落。
+     *
+     * <p>额外逻辑（Curios 联动）：若归还物品与①中记录的某个 Curios 槽位匹配，
+     * 且玩家当前该 Curios 槽位为空，则归还到对应 Curios 槽位。
+     * 仅在安装 Curios 时生效；未安装时 {@code curiosSlots} 为空，{@link CuriosCompat#tryReturnToCurioSlot}
+     * 会直接返回 false，行为与原版一致。</p>
      */
-    private static void returnToPlayer(Player player, ItemStack stack, CompoundTag armorSlots) {
+    private static void returnToPlayer(Player player, ItemStack stack, CompoundTag armorSlots,
+                                       CompoundTag curiosSlots) {
         for (String slotKey : armorSlots.getAllKeys()) {
             ItemStack recordedStack = ItemStack.of(armorSlots.getCompound(slotKey));
             if (!recordedStack.isEmpty() && ItemStack.isSameItemSameTags(stack, recordedStack)) {
@@ -173,6 +184,10 @@ public class DeathEventHandler {
                     return;
                 }
             }
+        }
+        // Curios 槽位智能还原（仅在安装 Curios 时生效）
+        if (CuriosCompat.tryReturnToCurioSlot(player, stack, curiosSlots)) {
+            return;
         }
         if (!player.getInventory().add(stack)) {
             player.drop(stack, true);

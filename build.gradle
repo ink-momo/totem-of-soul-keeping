@@ -27,6 +27,12 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+
+            // Curios 1.18.1-5.0.4.0+ 引入了 Mixin，开发环境运行需要以下两行配置
+            // 参考: https://github.com/TheIllusiveC4/Curios/blob/1.20.x/docs/README.md
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
             mods {
                 "${mod_id}" {
                     source sourceSets.main
@@ -58,10 +64,20 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     maven { url = 'https://maven.minecraftforge.net/' }
+    // Curios maven 仓库（仅在编译与开发环境运行时需要，运行时不强制要求 Curios）
+    maven {
+        name = "CuriosMaven"
+        url = "https://maven.theillusivec4.top/"
+    }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // Curios：仅编译期需要 API，开发环境运行时需要完整 jar
+    // 玩家侧运行时不强制要求 Curios，模组通过 ModList.isLoaded("curios") 检查并降级
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
 }
 
 tasks.named('processResources', ProcessResources).configure {
