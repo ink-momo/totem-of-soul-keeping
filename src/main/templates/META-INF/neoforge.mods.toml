@@ -88,6 +88,14 @@ A charm that keeps your belongings (and optionally your experience) with you ins
     ordering="NONE"
     side="BOTH"
 
+# Curios is an optional dependency: cross-mod compatibility only, guarded by ModList.isLoaded at runtime.
+[[dependencies.${mod_id}]]
+    modId="curios"
+    type="optional"
+    versionRange="[9.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.
