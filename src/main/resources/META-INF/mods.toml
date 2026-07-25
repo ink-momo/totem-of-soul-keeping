@@ -22,11 +22,3 @@ description='''${mod_description}'''
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
-
-# Curios 为可选依赖：未安装时本模组行为与原版一致，仅失去 Curios 槽位的智能还原功能
-[[dependencies.${mod_id}]]
-    modId="curios"
-    mandatory=false
-    versionRange="[5.0,)"
-    ordering="AFTER"
-    side="BOTH"

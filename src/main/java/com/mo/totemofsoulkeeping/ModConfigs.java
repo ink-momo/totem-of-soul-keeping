@@ -1,13 +1,13 @@
 package com.mo.totemofsoulkeeping;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ModConfigs {
 
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    public static final ForgeConfigSpec SPEC;
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static final ModConfigSpec SPEC;
 
-    public static final ForgeConfigSpec.BooleanValue KEEP_EXPERIENCE;
+    public static final ModConfigSpec.BooleanValue KEEP_EXPERIENCE;
 
     static {
         BUILDER.comment("Totem of Soul Keeping configuration").push("general");
